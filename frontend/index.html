@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Management System</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a href="index.html" class="brand">UMT Student Management</a>
+      <div class="nav-links" id="nav-links"></div>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="container">
+      <h1>Student Management System</h1>
+      <p>
+        A centralized web platform for managing student records, course enrollments,
+        attendance tracking, grades, and announcements at the University of Management and Technology.
+      </p>
+      <a href="login.html" class="btn btn-primary">Get Started — Login</a>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="container grid grid-3">
+      <div class="card">
+        <h3>For Administrators</h3>
+        <p>Manage students, courses, teachers, and view system-wide statistics from a central dashboard.</p>
+      </div>
+      <div class="card">
+        <h3>For Teachers</h3>
+        <p>Record attendance, enter grades, and post announcements for your assigned courses.</p>
+      </div>
+      <div class="card">
+        <h3>For Students</h3>
+        <p>View your profile, enrolled courses, attendance records, and grade results in one place.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <p>Student Management System &mdash; Hameem Ahmed (F2024408155) &mdash; UMT</p>
+    </div>
+  </footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script>renderNavbar("home");</script>
+</body>
+</html>

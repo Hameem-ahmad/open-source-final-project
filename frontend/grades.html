@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grades</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a href="index.html" class="brand">UMT Student Management</a>
+      <div class="nav-links" id="nav-links"></div>
+    </div>
+  </nav>
+
+  <section class="page">
+    <div class="container">
+      <h1 style="margin-bottom:1.5rem;color:var(--primary);">Grade Management</h1>
+      <div id="alert-box"></div>
+
+      <div class="card" id="grade-form-section">
+        <h2>Enter / Update Grade</h2>
+        <form id="grade-form" class="form-row">
+          <div class="form-group"><label>Student ID</label><input type="number" id="student_id" required></div>
+          <div class="form-group"><label>Course ID</label><input type="number" id="course_id" required></div>
+          <div class="form-group"><label>Marks</label><input type="number" id="marks" required min="0" max="100" step="0.01"></div>
+          <div class="form-group"><label>Letter Grade</label><input type="text" id="letter_grade" placeholder="Auto-calculated"></div>
+          <div class="form-group"><label>Remarks</label><input type="text" id="remarks"></div>
+          <div class="form-group" style="align-self:end;"><button type="submit" class="btn btn-primary">Save Grade</button></div>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>View Grades</h2>
+        <div class="form-row" style="margin-bottom:1rem;">
+          <div class="form-group"><label>Student ID</label><input type="number" id="view-student-id"></div>
+          <div class="form-group" style="align-self:end;"><button class="btn btn-secondary" id="view-btn">View Grades</button></div>
+        </div>
+        <div id="gpa-display" style="margin-bottom:1rem;font-weight:600;color:var(--primary);"></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Course</th><th>Code</th><th>Marks</th><th>Grade</th><th>Remarks</th><th id="actions-header">Actions</th></tr></thead>
+            <tbody id="grades-table"><tr><td colspan="6">Enter a student ID to view grades.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    const user = requireAuth(["admin", "teacher", "student"]);
+    renderNavbar("grades");
+
+    if (user && user.role === "student") {
+      document.getElementById("grade-form-section").classList.add("hidden");
+      document.getElementById("actions-header").classList.add("hidden");
+    }
+
+    async function loadGrades(studentId) {
+      try {
+        const summary = await apiRequest(`/api/grades/summary/${studentId}`);
+        document.getElementById("gpa-display").textContent = `Estimated GPA: ${summary.gpa}`;
+        const tbody = document.getElementById("grades-table");
+        if (!summary.grades.length) {
+          tbody.innerHTML = '<tr><td colspan="6">No grades found.</td></tr>';
+          return;
+        }
+        const showActions = user.role !== "student";
+        tbody.innerHTML = summary.grades.map((g) => `
+          <tr>
+            <td>${g.course_title}</td><td>${g.course_code}</td>
+            <td>${g.marks}</td><td>${g.letter_grade}</td><td>${g.remarks || "-"}</td>
+            <td class="${showActions ? "" : "hidden"}">
+              <button class="btn btn-danger btn-sm" onclick="deleteGrade(${g.id}, ${studentId})">Delete</button>
+            </td>
+          </tr>
+        `).join("");
+      } catch (err) {
+        showAlert("alert-box", err.message);
+      }
+    }
+
+    window.deleteGrade = async function(gradeId, studentId) {
+      if (!confirm("Delete this grade?")) return;
+      try {
+        await apiRequest(`/api/grades/${gradeId}`, { method: "DELETE" });
+        showAlert("alert-box", "Grade deleted.", "success");
+        loadGrades(studentId);
+      } catch (err) {
+        showAlert("alert-box", err.message);
+      }
+    };
+
+    document.getElementById("grade-form")?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearAlert("alert-box");
+      const letter = document.getElementById("letter_grade").value;
+      try {
+        await apiRequest("/api/grades", {
+          method: "POST",
+          body: JSON.stringify({
+            student_id: parseInt(document.getElementById("student_id").value, 10),
+            course_id: parseInt(document.getElementById("course_id").value, 10),
+            marks: parseFloat(document.getElementById("marks").value),
+            letter_grade: letter || null,
+            remarks: document.getElementById("remarks").value || null,
+          }),
+        });
+        showAlert("alert-box", "Grade saved.", "success");
+      } catch (err) {
+        showAlert("alert-box", err.message);
+      }
+    });
+
+    document.getElementById("view-btn").addEventListener("click", async () => {
+      let studentId = document.getElementById("view-student-id").value;
+      if (user.role === "student") {
+        const dashboard = await apiRequest("/api/dashboard/student");
+        studentId = dashboard.profile.id;
+        document.getElementById("view-student-id").value = studentId;
+      }
+      if (studentId) loadGrades(parseInt(studentId, 10));
+    });
+
+    if (user && user.role === "student") {
+      document.getElementById("view-btn").click();
+    }
+  </script>
+</body>
+</html>

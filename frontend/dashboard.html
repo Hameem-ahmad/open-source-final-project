@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a href="index.html" class="brand">UMT Student Management</a>
+      <div class="nav-links" id="nav-links"></div>
+    </div>
+  </nav>
+
+  <section class="page">
+    <div class="container">
+      <h1 style="margin-bottom:1.5rem;color:var(--primary);">Admin Dashboard</h1>
+      <div id="alert-box"></div>
+
+      <div class="grid grid-3" id="stats-grid">
+        <div class="stat-card"><h3 id="stat-students">-</h3><p>Total Students</p></div>
+        <div class="stat-card"><h3 id="stat-courses">-</h3><p>Total Courses</p></div>
+        <div class="stat-card"><h3 id="stat-teachers">-</h3><p>Total Teachers</p></div>
+      </div>
+
+      <div class="card" style="margin-top:2rem;">
+        <h2>Quick Navigation</h2>
+        <div class="quick-links">
+          <a href="students.html" class="quick-link">Manage Students</a>
+          <a href="courses.html" class="quick-link">Manage Courses</a>
+          <a href="announcements.html" class="quick-link">Announcements</a>
+          <a href="attendance.html" class="quick-link">Attendance</a>
+          <a href="grades.html" class="quick-link">Grades</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Recent Announcements</h2>
+        <div id="recent-announcements">Loading...</div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container"><p>Student Management System &mdash; Admin Dashboard</p></div>
+  </footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    requireAuth(["admin"]);
+    renderNavbar("dashboard");
+
+    async function loadDashboard() {
+      try {
+        const stats = await apiRequest("/api/dashboard/stats");
+        document.getElementById("stat-students").textContent = stats.total_students;
+        document.getElementById("stat-courses").textContent = stats.total_courses;
+        document.getElementById("stat-teachers").textContent = stats.total_teachers;
+
+        const announcements = await apiRequest("/api/announcements");
+        const container = document.getElementById("recent-announcements");
+        if (!announcements.length) {
+          container.innerHTML = "<p>No announcements yet.</p>";
+          return;
+        }
+        container.innerHTML = announcements.slice(0, 5).map((a) => `
+          <div class="announcement-item">
+            <h4>${a.title}</h4>
+            <div class="announcement-meta">By ${a.author_name || "Unknown"} &mdash; ${formatDate(a.posted_at)}</div>
+            <p>${a.body}</p>
+          </div>
+        `).join("");
+      } catch (err) {
+        showAlert("alert-box", err.message);
+      }
+    }
+
+    loadDashboard();
+  </script>
+</body>
+</html>

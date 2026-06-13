@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Announcements</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a href="index.html" class="brand">UMT Student Management</a>
+      <div class="nav-links" id="nav-links"></div>
+    </div>
+  </nav>
+
+  <section class="page">
+    <div class="container">
+      <h1 style="margin-bottom:1.5rem;color:var(--primary);">Announcements</h1>
+      <div id="alert-box"></div>
+
+      <div class="card hidden" id="post-section">
+        <h2>Post New Announcement</h2>
+        <form id="announcement-form">
+          <div class="form-group"><label>Title</label><input type="text" id="title" required></div>
+          <div class="form-group"><label>Body</label><textarea id="body" required></textarea></div>
+          <button type="submit" class="btn btn-primary">Post Announcement</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>All Announcements</h2>
+        <div id="announcements-list">Loading...</div>
+      </div>
+    </div>
+  </section>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    const user = requireAuth(["admin", "teacher", "student"]);
+    renderNavbar("announcements");
+
+    if (user && (user.role === "admin" || user.role === "teacher")) {
+      document.getElementById("post-section").classList.remove("hidden");
+    }
+
+    async function loadAnnouncements() {
+      try {
+        const items = await apiRequest("/api/announcements");
+        const container = document.getElementById("announcements-list");
+        if (!items.length) {
+          container.innerHTML = "<p>No announcements yet.</p>";
+          return;
+        }
+        const canDelete = user.role === "admin" || user.role === "teacher";
+        container.innerHTML = items.map((a) => `
+          <div class="announcement-item">
+            <h4>${a.title}</h4>
+            <div class="announcement-meta">By ${a.author_name || "Unknown"} &mdash; ${formatDate(a.posted_at)}</div>
+            <p>${a.body}</p>
+            ${canDelete ? `<button class="btn btn-danger btn-sm" onclick="deleteAnnouncement(${a.id})">Delete</button>` : ""}
+          </div>
+        `).join("");
+      } catch (err) {
+        showAlert("alert-box", err.message);
+      }
+    }
+
+    window.deleteAnnouncement = async function(id) {
+      if (!confirm("Delete this announcement?")) return;
+      try {
+        await apiRequest(`/api/announcements/${id}`, { method: "DELETE" });
+        showAlert("alert-box", "Announcement deleted.", "success");
+        loadAnnouncements();
+      } catch (err) {
+        showAlert("alert-box", err.message);
+      }
+    };
+
+    document.getElementById("announcement-form")?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearAlert("alert-box");
+      try {
+        await apiRequest("/api/announcements", {
+          method: "POST",
+          body: JSON.stringify({
+            title: document.getElementById("title").value,
+            body: document.getElementById("body").value,
+          }),
+        });
+        document.getElementById("announcement-form").reset();
+        showAlert("alert-box", "Announcement posted.", "success");
+        loadAnnouncements();
+      } catch (err) {
+        showAlert("alert-box", err.message);
+      }
+    });
+
+    loadAnnouncements();
+  </script>
+</body>
+</html>

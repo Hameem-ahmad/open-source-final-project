@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Course Management</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a href="index.html" class="brand">UMT Student Management</a>
+      <div class="nav-links" id="nav-links"></div>
+    </div>
+  </nav>
+
+  <section class="page">
+    <div class="container">
+      <h1 style="margin-bottom:1.5rem;color:var(--primary);">Course Management</h1>
+      <div id="alert-box"></div>
+
+      <div class="card">
+        <h2 id="form-title">Add New Course</h2>
+        <form id="course-form">
+          <div class="form-row">
+            <div class="form-group"><label>Title</label><input type="text" id="title" required></div>
+            <div class="form-group"><label>Code</label><input type="text" id="code" required></div>
+            <div class="form-group"><label>Credit Hours</label><input type="number" id="credit_hours" required min="1"></div>
+            <div class="form-group">
+              <label>Teacher ID</label>
+              <input type="number" id="teacher_id" placeholder="User ID of teacher">
+            </div>
+          </div>
+          <div class="actions">
+            <button type="submit" class="btn btn-primary" id="submit-btn">Add Course</button>
+            <button type="button" class="btn btn-secondary hidden" id="cancel-btn">Cancel</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Enroll Student in Course</h2>
+        <form id="enroll-form" class="form-row">
+          <div class="form-group"><label>Course ID</label><input type="number" id="enroll-course" required></div>
+          <div class="form-group"><label>Student ID</label><input type="number" id="enroll-student" required></div>
+          <div class="form-group" style="align-self:end;"><button type="submit" class="btn btn-primary">Enroll</button></div>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>All Courses</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>ID</th><th>Code</th><th>Title</th><th>Credits</th><th>Teacher</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="courses-table"><tr><td colspan="6">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Enrolled Students</h2>
+        <div class="form-row" style="margin-bottom:1rem;">
+          <div class="form-group"><label>View enrollments for Course ID</label><input type="number" id="view-course-id"></div>
+          <div class="form-group" style="align-self:end;"><button class="btn btn-secondary" id="view-enrollments">View</button></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Roll</th><th>Name</th><th>Department</th><th>Action</th></tr></thead>
+            <tbody id="enrollments-table"><tr><td colspan="5">Select a course to view enrollments.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    requireAuth(["admin"]);
+    renderNavbar("courses");
+
+    let editingId = null;
+    let currentCourseId = null;
+
+    async function loadCourses() {
+      try {
+        const courses = await apiRequest("/api/courses");
+        const tbody = document.getElementById("courses-table");
+        if (!courses.length) {
+          tbody.innerHTML = '<tr><td colspan="6">No courses found.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = courses.map((c) => `
+          <tr>
+            <td>${c.id}</td><td>${c.code}</td><td>${c.title}</td>
+            <td>${c.credit_hours}</td><td>${c.teacher_name || "-"}</td>
+            <td class="actions">
+              <button class="btn btn-secondary btn-sm" onclick="editCourse(${c.id})">Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteCourse(${c.id})">Delete</button>
+              <button class="btn btn-secondary btn-sm" onclick="viewEnrollments(${c.id})">Students</button>
+            </td>
+          </tr>
+        `).join("");
+      } catch (err) {
+        showAlert("alert-box", err.message);
+      }
+    }
+
+    window.editCourse = async function(id) {
+      const courses = await apiRequest("/api/courses");
+      const c = courses.find((x) => x.id === id);
+      if (!c) return;
+      editingId = id;
+      document.getElementById("title").value = c.title;
+      document.getElementById("code").value = c.code;
+      document.getElementById("credit_hours").value = c.credit_hours;
+      document.getElementById("teacher_id").value = c.teacher_id || "";
+      document.getElementById("submit-btn").textContent = "Update Course";
+      document.getElementById("form-title").textContent = "Edit Course";
+      document.getElementById("cancel-btn").classList.remove("hidden");
+    };
+
+    window.deleteCourse = async function(id) {
+      if (!confirm("Delete this course?")) return;
+      try {
+        await apiRequest(`/api/courses/${id}`, { method: "DELETE" });
+        showAlert("alert-box", "Course deleted.", "success");
+        loadCourses();
+      } catch (err) {
+        showAlert("alert-box", err.message);
+      }
+    };
+
+    window.viewEnrollments = async function(courseId) {
+      currentCourseId = courseId;
+      document.getElementById("view-course-id").value = courseId;
+      try {
+        const students = await apiRequest(`/api/courses/${courseId}/students`);
+        const tbody = document.getElementById("enrollments-table");
+        if (!students.length) {
+          tbody.innerHTML = '<tr><td colspan="5">No students enrolled.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = students.map((s) => `
+          <tr>
+            <td>${s.id}</td><td>${s.roll_number}</td><td>${s.full_name}</td><td>${s.department}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="removeEnrollment(${s.id})">Remove</button></td>
+          </tr>
+        `).join("");
+      } catch (err) {
+        showAlert("alert-box", err.message);
+      }
+    };
+
+    window.removeEnrollment = async function(studentId) {
+      if (!currentCourseId) return;
+      try {
+        await apiRequest(`/api/courses/${currentCourseId}/enroll/${studentId}`, { method: "DELETE" });
+        showAlert("alert-box", "Student removed from course.", "success");
+        viewEnrollments(currentCourseId);
+      } catch (err) {
+        showAlert("alert-box", err.message);
+      }
+    };
+
+    document.getElementById("cancel-btn").addEventListener("click", () => {
+      editingId = null;
+      document.getElementById("course-form").reset();
+      document.getElementById("submit-btn").textContent = "Add Course";
+      document.getElementById("form-title").textContent = "Add New Course";
+      document.getElementById("cancel-btn").classList.add("hidden");
+    });
+
+    document.getElementById("course-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearAlert("alert-box");
+      const teacherVal = document.getElementById("teacher_id").value;
+      const payload = {
+        title: document.getElementById("title").value,
+        code: document.getElementById("code").value,
+        credit_hours: parseInt(document.getElementById("credit_hours").value, 10),
+        teacher_id: teacherVal ? parseInt(teacherVal, 10) : null,
+      };
+      try {
+        if (editingId) {
+          await apiRequest(`/api/courses/${editingId}`, { method: "PUT", body: JSON.stringify(payload) });
+          showAlert("alert-box", "Course updated.", "success");
+        } else {
+          await apiRequest("/api/courses", { method: "POST", body: JSON.stringify(payload) });
+          showAlert("alert-box", "Course created.", "success");
+        }
+        document.getElementById("cancel-btn").click();
+        loadCourses();
+      } catch (err) {
+        showAlert("alert-box", err.message);
+      }
+    });
+
+    document.getElementById("enroll-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const courseId = document.getElementById("enroll-course").value;
+      const studentId = document.getElementById("enroll-student").value;
+      try {
+        await apiRequest(`/api/courses/${courseId}/enroll`, {
+          method: "POST",
+          body: JSON.stringify({ student_id: parseInt(studentId, 10) }),
+        });
+        showAlert("alert-box", "Student enrolled.", "success");
+      } catch (err) {
+        showAlert("alert-box", err.message);
+      }
+    });
+
+    document.getElementById("view-enrollments").addEventListener("click", () => {
+      const id = document.getElementById("view-course-id").value;
+      if (id) viewEnrollments(parseInt(id, 10));
+    });
+
+    loadCourses();
+  </script>
+</body>
+</html>

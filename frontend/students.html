@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Management</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a href="index.html" class="brand">UMT Student Management</a>
+      <div class="nav-links" id="nav-links"></div>
+    </div>
+  </nav>
+
+  <section class="page">
+    <div class="container">
+      <h1 style="margin-bottom:1.5rem;color:var(--primary);">Student Management</h1>
+      <div id="alert-box"></div>
+
+      <div class="card">
+        <h2>Add New Student</h2>
+        <form id="student-form">
+          <input type="hidden" id="edit-id">
+          <div class="form-row">
+            <div class="form-group"><label>Full Name</label><input type="text" id="full_name" required></div>
+            <div class="form-group"><label>Email</label><input type="email" id="email" required></div>
+            <div class="form-group"><label>Password</label><input type="password" id="password" minlength="6"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Roll Number</label><input type="text" id="roll_number" required></div>
+            <div class="form-group"><label>Department</label><input type="text" id="department" required></div>
+            <div class="form-group"><label>Semester</label><input type="number" id="semester" required min="1"></div>
+            <div class="form-group"><label>Enrollment Year</label><input type="number" id="enrollment_year" required></div>
+            <div class="form-group"><label>Contact</label><input type="text" id="contact"></div>
+          </div>
+          <div class="actions">
+            <button type="submit" class="btn btn-primary" id="submit-btn">Add Student</button>
+            <button type="button" class="btn btn-secondary hidden" id="cancel-btn">Cancel Edit</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Student List</h2>
+        <div class="search-bar">
+          <input type="text" id="search" placeholder="Search by name, roll, or email">
+          <input type="text" id="filter-dept" placeholder="Filter by department">
+          <input type="number" id="filter-year" placeholder="Enrollment year">
+          <button class="btn btn-secondary" id="search-btn">Search</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Roll No</th><th>Name</th><th>Email</th><th>Department</th>
+                <th>Semester</th><th>Year</th><th>Contact</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="students-table"><tr><td colspan="8">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    requireAuth(["admin"]);
+    renderNavbar("students");
+
+    let editingId = null;
+
+    async function loadStudents() {
+      const params = new URLSearchParams();
+      const search = document.getElementById("search").value;
+      const dept = document.getElementById("filter-dept").value;
+      const year = document.getElementById("filter-year").value;
+      if (search) params.append("search", search);
+      if (dept) params.append("department", dept);
+      if (year) params.append("enrollment_year", year);
+
+      try {
+        const students = await apiRequest(`/api/students?${params}`);
+        const tbody = document.getElementById("students-table");
+        if (!students.length) {
+          tbody.innerHTML = '<tr><td colspan="8">No students found.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = students.map((s) => `
+          <tr>
+            <td>${s.roll_number}</td><td>${s.full_name}</td><td>${s.email}</td>
+            <td>${s.department}</td><td>${s.semester}</td><td>${s.enrollment_year}</td>
+            <td>${s.contact || "-"}</td>
+            <td class="actions">
+              <button class="btn btn-secondary btn-sm" onclick="editStudent(${s.id})">Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteStudent(${s.id})">Delete</button>
+            </td>
+          </tr>
+        `).join("");
+      } catch (err) {
+        showAlert("alert-box", err.message);
+      }
+    }
+
+    window.editStudent = async function(id) {
+      const students = await apiRequest("/api/students");
+      const s = students.find((x) => x.id === id);
+      if (!s) return;
+      editingId = id;
+      document.getElementById("full_name").value = s.full_name;
+      document.getElementById("email").value = s.email;
+      document.getElementById("password").value = "";
+      document.getElementById("password").required = false;
+      document.getElementById("roll_number").value = s.roll_number;
+      document.getElementById("department").value = s.department;
+      document.getElementById("semester").value = s.semester;
+      document.getElementById("enrollment_year").value = s.enrollment_year;
+      document.getElementById("contact").value = s.contact || "";
+      document.getElementById("submit-btn").textContent = "Update Student";
+      document.getElementById("cancel-btn").classList.remove("hidden");
+    };
+
+    window.deleteStudent = async function(id) {
+      if (!confirm("Delete this student?")) return;
+      try {
+        await apiRequest(`/api/students/${id}`, { method: "DELETE" });
+        showAlert("alert-box", "Student deleted.", "success");
+        loadStudents();
+      } catch (err) {
+        showAlert("alert-box", err.message);
+      }
+    };
+
+    document.getElementById("cancel-btn").addEventListener("click", () => {
+      editingId = null;
+      document.getElementById("student-form").reset();
+      document.getElementById("password").required = true;
+      document.getElementById("submit-btn").textContent = "Add Student";
+      document.getElementById("cancel-btn").classList.add("hidden");
+    });
+
+    document.getElementById("student-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearAlert("alert-box");
+      const payload = {
+        full_name: document.getElementById("full_name").value,
+        email: document.getElementById("email").value,
+        roll_number: document.getElementById("roll_number").value,
+        department: document.getElementById("department").value,
+        semester: parseInt(document.getElementById("semester").value, 10),
+        enrollment_year: parseInt(document.getElementById("enrollment_year").value, 10),
+        contact: document.getElementById("contact").value || null,
+      };
+      try {
+        if (editingId) {
+          await apiRequest(`/api/students/${editingId}`, { method: "PUT", body: JSON.stringify(payload) });
+          showAlert("alert-box", "Student updated.", "success");
+        } else {
+          payload.password = document.getElementById("password").value;
+          await apiRequest("/api/students", { method: "POST", body: JSON.stringify(payload) });
+          showAlert("alert-box", "Student added.", "success");
+        }
+        document.getElementById("cancel-btn").click();
+        loadStudents();
+      } catch (err) {
+        showAlert("alert-box", err.message);
+      }
+    });
+
+    document.getElementById("search-btn").addEventListener("click", loadStudents);
+    loadStudents();
+  </script>
+</body>
+</html>

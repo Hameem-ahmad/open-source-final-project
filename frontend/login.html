@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Student Management System</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a href="index.html" class="brand">UMT Student Management</a>
+      <div class="nav-links" id="nav-links"></div>
+    </div>
+  </nav>
+
+  <section class="login-page">
+    <div class="container">
+      <div class="card login-card">
+        <div class="tabs">
+          <button class="tab active" data-tab="login">Login</button>
+          <button class="tab" data-tab="register">Register (Student)</button>
+        </div>
+
+        <div id="alert-box"></div>
+
+        <div class="tab-content active" id="tab-login">
+          <h2>Login</h2>
+          <form id="login-form">
+            <div class="form-group">
+              <label for="login-email">Email</label>
+              <input type="email" id="login-email" required placeholder="admin@ums.edu">
+            </div>
+            <div class="form-group">
+              <label for="login-password">Password</label>
+              <input type="password" id="login-password" required placeholder="admin123">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;">Login</button>
+          </form>
+          <div class="alert alert-info" style="margin-top:1rem;">
+            <strong>Demo accounts (use Login tab):</strong><br>
+            <strong>Admin:</strong> admin@ums.edu / admin123 → Dashboard<br>
+            <strong>Teacher:</strong> teacher@ums.edu / teacher123 → Attendance &amp; Grades<br>
+            <strong>Student:</strong> student@ums.edu / student123 → My Profile<br>
+            <em style="font-size:0.85rem;">Restart the backend once if teacher/student accounts were just added.</em>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-register">
+          <h2>Register as Student</h2>
+          <form id="register-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="reg-name">Full Name</label>
+                <input type="text" id="reg-name" required>
+              </div>
+              <div class="form-group">
+                <label for="reg-email">Email</label>
+                <input type="email" id="reg-email" required>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="reg-password">Password</label>
+                <input type="password" id="reg-password" required minlength="6">
+              </div>
+              <div class="form-group">
+                <label for="reg-roll">Roll Number</label>
+                <input type="text" id="reg-roll" required>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="reg-dept">Department</label>
+                <input type="text" id="reg-dept" required>
+              </div>
+              <div class="form-group">
+                <label for="reg-semester">Semester</label>
+                <input type="number" id="reg-semester" required min="1" max="8">
+              </div>
+              <div class="form-group">
+                <label for="reg-year">Enrollment Year</label>
+                <input type="number" id="reg-year" required min="2020" max="2030">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="reg-contact">Contact (optional)</label>
+              <input type="text" id="reg-contact">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;">Register</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    renderNavbar();
+
+    const user = getUser();
+    if (user && getToken()) {
+      window.location.href = redirectByRole(user.role);
+    }
+
+    document.querySelectorAll(".tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
+        document.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById(`tab-${tab.dataset.tab}`).classList.add("active");
+        clearAlert("alert-box");
+      });
+    });
+
+    document.getElementById("login-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearAlert("alert-box");
+      try {
+        const data = await apiRequest("/api/auth/login", {
+          method: "POST",
+          body: JSON.stringify({
+            email: document.getElementById("login-email").value,
+            password: document.getElementById("login-password").value,
+          }),
+        });
+        setAuth(data.access_token, data.user);
+        window.location.href = redirectByRole(data.user.role);
+      } catch (err) {
+        showAlert("alert-box", err.message);
+      }
+    });
+
+    document.getElementById("register-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearAlert("alert-box");
+      try {
+        const data = await apiRequest("/api/auth/register", {
+          method: "POST",
+          body: JSON.stringify({
+            full_name: document.getElementById("reg-name").value,
+            email: document.getElementById("reg-email").value,
+            password: document.getElementById("reg-password").value,
+            role: "student",
+            roll_number: document.getElementById("reg-roll").value,
+            department: document.getElementById("reg-dept").value,
+            semester: parseInt(document.getElementById("reg-semester").value, 10),
+            enrollment_year: parseInt(document.getElementById("reg-year").value, 10),
+            contact: document.getElementById("reg-contact").value || null,
+          }),
+        });
+        setAuth(data.access_token, data.user);
+        window.location.href = "profile.html";
+      } catch (err) {
+        showAlert("alert-box", err.message);
+      }
+    });
+  </script>
+</body>
+</html>

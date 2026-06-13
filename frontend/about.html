@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About - Student Management System</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a href="index.html" class="brand">UMT Student Management</a>
+      <div class="nav-links" id="nav-links"></div>
+    </div>
+  </nav>
+
+  <section class="page">
+    <div class="container">
+      <div class="card">
+        <h2>About the System</h2>
+        <p>
+          The Student Management System is a full-stack web application developed as the Final Semester
+          Project for the Open Source Software Development course at the University of Management and Technology.
+        </p>
+        <p style="margin-top:1rem;">
+          It addresses the challenges of paper-based and spreadsheet-driven student administration by providing
+          a centralized platform for managing student records, enrollments, attendance, grades, and announcements.
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>Technology Stack</h2>
+        <div class="grid grid-2">
+          <div>
+            <h3>Frontend</h3>
+            <ul style="margin-left:1.25rem;">
+              <li>HTML, CSS, JavaScript</li>
+              <li>Deployed on Vercel / Netlify</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Backend</h3>
+            <ul style="margin-left:1.25rem;">
+              <li>FastAPI (Python)</li>
+              <li>SQLAlchemy ORM</li>
+              <li>JWT Authentication</li>
+              <li>Deployed on Render</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Database</h3>
+            <ul style="margin-left:1.25rem;">
+              <li>PostgreSQL</li>
+              <li>Hosted on Supabase</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Version Control</h3>
+            <ul style="margin-left:1.25rem;">
+              <li>Git &amp; GitHub</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Development Team</h2>
+        <table>
+          <tr><th>Name</th><td>Hameem Ahmed</td></tr>
+          <tr><th>Student ID</th><td>F2024408155</td></tr>
+          <tr><th>Section</th><td>Y9</td></tr>
+          <tr><th>Course</th><td>Open Source Software Development</td></tr>
+          <tr><th>University</th><td>University of Management and Technology</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <p>Student Management System &mdash; Hameem Ahmed (F2024408155) &mdash; UMT</p>
+    </div>
+  </footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script>renderNavbar("about");</script>
+</body>
+</html>

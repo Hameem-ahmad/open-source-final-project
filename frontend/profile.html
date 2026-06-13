@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Profile</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a href="index.html" class="brand">UMT Student Management</a>
+      <div class="nav-links" id="nav-links"></div>
+    </div>
+  </nav>
+
+  <section class="page">
+    <div class="container">
+      <h1 style="margin-bottom:1.5rem;color:var(--primary);">My Profile</h1>
+      <div id="alert-box"></div>
+
+      <div class="grid grid-2">
+        <div class="card">
+          <h2>Profile Information</h2>
+          <table id="profile-table">
+            <tr><th>Loading...</th><td></td></tr>
+          </table>
+        </div>
+        <div class="card">
+          <h2>Enrolled Courses</h2>
+          <div id="courses-list">Loading...</div>
+        </div>
+      </div>
+
+      <div class="grid grid-2" style="margin-top:1.5rem;">
+        <div class="card">
+          <h2>Recent Grades</h2>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Course</th><th>Marks</th><th>Grade</th></tr></thead>
+              <tbody id="grades-list"><tr><td colspan="3">Loading...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Attendance Summary</h2>
+          <div id="attendance-summary">Loading...</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    requireAuth(["student"]);
+    renderNavbar("profile");
+
+    async function loadProfile() {
+      try {
+        const data = await apiRequest("/api/dashboard/student");
+        const p = data.profile;
+
+        document.getElementById("profile-table").innerHTML = `
+          <tr><th>Full Name</th><td>${p.full_name}</td></tr>
+          <tr><th>Email</th><td>${p.email}</td></tr>
+          <tr><th>Roll Number</th><td>${p.roll_number}</td></tr>
+          <tr><th>Department</th><td>${p.department}</td></tr>
+          <tr><th>Semester</th><td>${p.semester}</td></tr>
+          <tr><th>Enrollment Year</th><td>${p.enrollment_year}</td></tr>
+          <tr><th>Contact</th><td>${p.contact || "-"}</td></tr>
+        `;
+
+        const coursesEl = document.getElementById("courses-list");
+        if (!data.enrolled_courses.length) {
+          coursesEl.innerHTML = "<p>No enrolled courses.</p>";
+        } else {
+          coursesEl.innerHTML = `<ul style="margin-left:1.25rem;">${data.enrolled_courses.map((c) =>
+            `<li><strong>${c.code}</strong> — ${c.title} (${c.credit_hours} credits)</li>`
+          ).join("")}</ul>`;
+        }
+
+        const gradesBody = document.getElementById("grades-list");
+        if (!data.recent_grades.length) {
+          gradesBody.innerHTML = '<tr><td colspan="3">No grades yet.</td></tr>';
+        } else {
+          gradesBody.innerHTML = data.recent_grades.map((g) => `
+            <tr><td>${g.course_title}</td><td>${g.marks}</td><td>${g.letter_grade}</td></tr>
+          `).join("");
+        }
+
+        const attEl = document.getElementById("attendance-summary");
+        if (!data.attendance_summary.length) {
+          attEl.innerHTML = "<p>No attendance records.</p>";
+        } else {
+          attEl.innerHTML = `
+            <div class="table-wrap"><table>
+              <thead><tr><th>Course</th><th>Present</th><th>Absent</th><th>%</th></tr></thead>
+              <tbody>${data.attendance_summary.map((s) => `
+                <tr>
+                  <td>${s.course_title}</td><td>${s.present}</td><td>${s.absent}</td><td>${s.percentage}%</td>
+                </tr>
+              `).join("")}</tbody>
+            </table></div>
+          `;
+        }
+      } catch (err) {
+        showAlert("alert-box", err.message);
+      }
+    }
+
+    loadProfile();
+  </script>
+</body>
+</html>
