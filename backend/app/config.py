@@ -7,7 +7,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     database_url: str = os.getenv(
         "DATABASE_URL",
-        "sqlite:///./student_management.db",
+        "postgresql://postgres.cfczleeqgaytivtlbbhv:umtlmsaccount-786@aws-1-ap-northeast-2.pooler.supabase.com:6543/postgres",
     )
     secret_key: str = os.getenv("SECRET_KEY", "change-this-secret-key-in-production")
     algorithm: str = os.getenv("ALGORITHM", "HS256")
