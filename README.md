@@ -1,116 +1,54 @@
-Student Management System
+# Student Management System
+
+Developer: Hameem Ahmed  ID: F2024408155  Course: Open Source Software Development  
+
+Web app to manage students, courses, attendance, grades, and announcements with Admin, Teacher, and Student roles.
 
 
 
+ 
+
+| Layer | Technology |
+|-------|------------|
+| Frontend | HTML, CSS, JavaScript |
+| Backend | Python + FastAPI |
+| Database | SQLite (local) or PostgreSQL (Supabase) |
+| Auth | JWT + bcrypt |
 
 
-
-
-
-
-
-📌 Overview
-
-The Student Management System is a full-stack open-source project designed for managing student data efficiently.
-It demonstrates real-world software engineering practices including modular architecture, Git-based collaboration, and structured backend/frontend separation.
-
-This project is built for academic evaluation but follows industry-style development principles.
-
-🧠 Key Features
-👨‍🎓 Student record management (CRUD operations)
-🖥️ Clean modular architecture (Frontend / Backend / Database)
-🔐 Structured and scalable codebase
-📊 Organized data handling
-🌐 Web-based interface (if applicable)
-🤝 Multi-contributor Git workflow
-🏗️ Project Architecture
-                ┌──────────────────────┐
-                │      Frontend        │
-                │  (UI / Interface)    │
-                └─────────┬────────────┘
-                          │
-                          ▼
-                ┌──────────────────────┐
-                │      Backend         │
-                │ (Logic / APIs)       │
-                └─────────┬────────────┘
-                          │
-                          ▼
-                ┌──────────────────────┐
-                │      Database        │
-                │ (Data Storage Layer) │
-                └──────────────────────┘
-🛠️ Tech Stack
-Frontend: HTML / CSS / JavaScript (or framework used)
-Backend: Python / Node.js / PHP (update if needed)
-Database: MySQL / SQLite / MongoDB (update if needed)
-Version Control: Git & GitHub
-⚙️ Installation & Setup
-
-Follow these steps to run the project locally:
-
-1️⃣ Clone the repository
-git clone https://github.com/Hameem-ahmad/open-source-final-project.git
-2️⃣ Navigate into the project
-cd open-source-final-project
-3️⃣ Project structure
-
-Ensure folders exist:
-
-backend/
-frontend/
-database/
-4️⃣ Run the project
-
-(Instructions depend on backend type)
-
-Example:
-
-# If Python backend
+ Backend
+powershell
 cd backend
-python app.py
+venv\Scripts\activate
+pip install -r requirements.txt
+copy .env.example .env
+uvicorn app.main:app --reload --port 8000
 
-OR
 
-# If frontend only
-open index.html
-🤝 Contribution Guidelines
+- Docs: https://student-management-api-production-a951.up.railway.app/docs
+- App: https://open-source-final-project.vercel.app/
 
-We welcome contributions!
+ Demo Logins
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | admin@ums.edu | admin123 |
+| Teacher | teacher@ums.edu | teacher123 |
+| Student | student@ums.edu | student123 |
 
-Workflow:
-Fork the repository
-Clone your fork
-Create a new branch
-Make your changes
-Commit changes
-Push branch
-Create Pull Request
-Commit style:
-feat: add new module
-fix: resolve UI bug
-docs: update README
-🔄 Git Workflow Used
-Issue creation
-Branch-based development
-Pull Requests (PRs)
-Code reviews
-Merge into main branch
+ Project Structure 
 
-This ensures proper open-source collaboration practices.
 
-👥 Contributors
-👑 Project Owner: Hameem Ahmad
-💡 Contributors: (Add all team members here)
-📌 Future Improvements
-Add authentication system
-Improve UI/UX design
-API integration
-Role-based access control
-📜 License
+frontend/           10 HTML pages + css/style.css + js/api.js
+backend/app/
+  main.py           Starts the server
+  routes.py         ALL API endpoints (login, students, courses…)
+  auth.py           Password + JWT login
+  models.py         Database tables
+  schemas.py        Input/output validation
+  database.py       DB connection
+  config.py         Settings from .env
+  utils.py          Grade/GPA helpers
+database/schema.sql PostgreSQL schema (for Supabase)
 
-This project is for academic purposes. You may extend or modify it for learning purposes.
 
-⭐ Acknowledgements
 
-Special thanks to all contributors who participated in this project development and review process.
