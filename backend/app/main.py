@@ -1,8 +1,3 @@
-"""
-Main entry point — starts the FastAPI server.
-Run with: uvicorn app.main:app --reload --port 8000
-"""
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -33,7 +28,6 @@ register_routes(app)
 
 
 def seed_default_users():
-    """Create demo admin, teacher, and student accounts on first run."""
     db = SessionLocal()
     try:
         if not db.query(User).filter(User.email == "admin@ums.edu").first():

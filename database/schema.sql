@@ -1,4 +1,4 @@
--- Student Management System - PostgreSQL Schema for Supabase
+
 
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,

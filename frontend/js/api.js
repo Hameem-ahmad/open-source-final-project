@@ -1,4 +1,4 @@
-// Frontend helper — sends requests TO the Python backend (not a separate API server)
+
 function getToken() {
   return localStorage.getItem("token");
 }
