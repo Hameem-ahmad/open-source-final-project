@@ -26,12 +26,6 @@ uvicorn app.main:app --reload --port 8000
 
 
 - Docs: https://student-management-api-production-a951.up.railway.app/docs
-
- Frontend
-powershell
-cd frontend
-python -m http.server 5500
-
 - App: https://open-source-final-project.vercel.app/
 
  Demo Logins
