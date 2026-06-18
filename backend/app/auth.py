@@ -1,5 +1,3 @@
-"""Login helpers: hash passwords, create JWT tokens, check user roles."""
-
 from datetime import datetime, timedelta
 from typing import Optional
 
