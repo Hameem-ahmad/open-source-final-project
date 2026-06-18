@@ -24,7 +24,7 @@ pip install -r requirements.txt
 copy .env.example .env
 uvicorn app.main:app --reload --port 8000
 
-- API: http://127.0.0.1:8000
+
 - Docs: https://student-management-api-production-a951.up.railway.app/docs
 
  Frontend
@@ -32,7 +32,7 @@ powershell
 cd frontend
 python -m http.server 5500
 
-- App: http://127.0.0.1:5500
+- App: https://open-source-final-project.vercel.app/
 
  Demo Logins
 | Role | Email | Password |
@@ -41,7 +41,7 @@ python -m http.server 5500
 | Teacher | teacher@ums.edu | teacher123 |
 | Student | student@ums.edu | student123 |
 
- Project Structure (Simplified)
+ Project Structure 
 
 
 frontend/           10 HTML pages + css/style.css + js/api.js
@@ -57,13 +57,4 @@ backend/app/
 database/schema.sql PostgreSQL schema (for Supabase)
 
 
- Optional: Supabase + Vercel
 
-1. Run `database/schema.sql` in Supabase SQL Editor
-2. Copy connection string into `backend/.env` as `DATABASE_URL`
-3. Deploy `frontend/` folder to Vercel (static site)
-4. Update `frontend/js/config.js` with your backend URL
-
- License
-
-Academic project — University of Management and Technology.
