@@ -1,31 +1,29 @@
 from decimal import Decimal
-
-
 def marks_to_letter_grade(marks: Decimal) -> str:
-    value = float(marks)
-    if value >= 90:
+    score = float(marks)
+    if score >= 90:
         return "A"
-    if value >= 85:
+    if score >= 85:
         return "A-"
-    if value >= 80:
+    if score >= 80:
         return "B+"
-    if value >= 75:
+    if score >= 75:
         return "B"
-    if value >= 70:
+    if score >= 70:
         return "B-"
-    if value >= 65:
+    if score >= 65:
         return "C+"
-    if value >= 60:
+    if score >= 60:
         return "C"
-    if value >= 55:
+    if score >= 55:
         return "C-"
-    if value >= 50:
+    if score >= 50:
         return "D"
     return "F"
 
 
-def grade_point(letter: str) -> float:
-    mapping = {
+def get_grade_points(letter_grade: str) -> float:
+    grade_points_map = {
         "A": 4.0,
         "A-": 3.7,
         "B+": 3.3,
@@ -37,11 +35,11 @@ def grade_point(letter: str) -> float:
         "D": 1.0,
         "F": 0.0,
     }
-    return mapping.get(letter or "F", 0.0)
+    return grade_points_map.get(letter_grade or "F", 0.0)
 
 
-def calculate_gpa(grades: list) -> float:
-    if not grades:
+def calculate_gpa(all_grades: list) -> float:
+    if not all_grades:
         return 0.0
-    total = sum(grade_point(g.letter_grade) for g in grades)
-    return round(total / len(grades), 2)
+    total_points = sum(get_grade_points(g.letter_grade) for g in all_grades)
+    return round(total_points / len(all_grades), 2)

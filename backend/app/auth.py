@@ -1,54 +1,57 @@
 from datetime import datetime, timedelta
-from typing import Optional
-
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
-from app.config import get_settings
+from app.config import load_settings
 from app.database import get_db
 from app.models import User
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-security = HTTPBearer(auto_error=False)
-settings = get_settings()
+
+auth_header = HTTPBearer(auto_error=False)
+app_settings = load_settings()
 
 
-def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+def check_password(typed_password: str, saved_password: str) -> bool:
+    return typed_password == saved_password
 
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
-
-
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    to_encode = data.copy()
-    expire = datetime.utcnow() + (
-        expires_delta
-        or timedelta(minutes=settings.access_token_expire_minutes)
+def make_login_token(user_id: int, user_role: str) -> str:
+    token_data = {
+        "sub": str(user_id),
+        "role": user_role,
+    }
+    expire_time = datetime.utcnow() + timedelta(
+        minutes=app_settings.access_token_expire_minutes
     )
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
+    token_data["exp"] = expire_time
+    return jwt.encode(
+        token_data,
+        app_settings.secret_key,
+        algorithm=app_settings.algorithm,
+    )
 
 
-def get_current_user(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+def get_logged_in_user(
+    auth_info: HTTPAuthorizationCredentials = Depends(auth_header),
     db: Session = Depends(get_db),
 ) -> User:
-    if credentials is None:
+    if auth_info is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated",
         )
-    token = credentials.credentials
+
+    token = auth_info.credentials
+
     try:
-        payload = jwt.decode(
-            token, settings.secret_key, algorithms=[settings.algorithm]
+        decoded = jwt.decode(
+            token,
+            app_settings.secret_key,
+            algorithms=[app_settings.algorithm],
         )
-        user_id: Optional[int] = payload.get("sub")
+        user_id = decoded.get("sub")
         if user_id is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -69,13 +72,13 @@ def get_current_user(
     return user
 
 
-def require_roles(*roles: str):
-    def role_checker(current_user: User = Depends(get_current_user)) -> User:
-        if current_user.role not in roles:
+def must_be_role(*allowed_roles: str):
+    def check_role(logged_in_user: User = Depends(get_logged_in_user)) -> User:
+        if logged_in_user.role not in allowed_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Insufficient permissions",
             )
-        return current_user
+        return logged_in_user
 
-    return role_checker
+    return check_role

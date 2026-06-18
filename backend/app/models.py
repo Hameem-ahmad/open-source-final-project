@@ -22,8 +22,8 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     full_name = Column(String(150), nullable=False)
     email = Column(String(100), unique=True, nullable=False, index=True)
-    password_hash = Column(Text, nullable=False)
-    role = Column(String(20), nullable=False)
+    password_hash = Column(Text, nullable=False)  
+    role = Column(String(20), nullable=False)  
     created_at = Column(DateTime, default=datetime.utcnow)
 
     student_profile = relationship("Student", back_populates="user", uselist=False)

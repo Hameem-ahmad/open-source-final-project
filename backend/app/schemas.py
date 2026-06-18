@@ -12,6 +12,7 @@ class UserBase(BaseModel):
 
 
 class UserRegister(BaseModel):
+    """Data sent when a new user signs up."""
     full_name: str
     email: EmailStr
     password: str = Field(min_length=6)
@@ -24,11 +25,13 @@ class UserRegister(BaseModel):
 
 
 class UserLogin(BaseModel):
+    """Data sent when user logs in (email + password)."""
     email: EmailStr
     password: str
 
 
 class UserResponse(BaseModel):
+    """User info we send back to the frontend (no password)."""
     id: int
     full_name: str
     email: EmailStr
@@ -40,6 +43,7 @@ class UserResponse(BaseModel):
 
 
 class TokenResponse(BaseModel):
+    """Login response: token + user details."""
     access_token: str
     token_type: str = "bearer"
     user: UserResponse
@@ -54,12 +58,14 @@ class StudentBase(BaseModel):
 
 
 class StudentCreate(StudentBase):
+    """Data to create a new student (admin only)."""
     full_name: str
     email: EmailStr
     password: str = Field(min_length=6)
 
 
 class StudentUpdate(BaseModel):
+    """Data to update an existing student (all fields optional)."""
     full_name: Optional[str] = None
     email: Optional[EmailStr] = None
     roll_number: Optional[str] = None
@@ -70,6 +76,7 @@ class StudentUpdate(BaseModel):
 
 
 class StudentResponse(StudentBase):
+    """Student info sent back to frontend."""
     id: int
     user_id: int
     full_name: str
@@ -132,7 +139,6 @@ class AttendanceResponse(BaseModel):
     class Config:
         from_attributes = True
 
-
 class GradeCreate(BaseModel):
     student_id: int
     course_id: int
@@ -160,7 +166,6 @@ class GradeResponse(BaseModel):
     class Config:
         from_attributes = True
 
-
 class AnnouncementCreate(BaseModel):
     title: str
     body: str
@@ -176,7 +181,6 @@ class AnnouncementResponse(BaseModel):
 
     class Config:
         from_attributes = True
-
 
 class DashboardStats(BaseModel):
     total_students: int
